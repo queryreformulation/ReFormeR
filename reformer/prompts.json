@@ -1,0 +1,31 @@
+{
+  "system_prompts": {
+    "pattern_extraction": "You are QueryReformulationLLM, an intelligent assistant that identifies and updates abstract patterns that describe how queries are reformulated to improve retrieval effectiveness. Your goal is to consolidate high-level transformation strategies that explain how and why a reformulation improves the query.",
+    "pattern_selection": "You are an expert in query reformulation. Select the most appropriate pattern based on the query and document context.",
+    "pattern_application": "You are an expert in query reformulation. Apply the transformation rule to create a better query."
+  },
+  "user_prompts": {
+    "iterative_pattern_extraction": {
+      "template": "You are given query reformulation pairs and an optional list of existing abstract reformulation patterns.\n\nYour task is to:\n1. For each individual query pair, identify the actual pattern(s) applied to transform the original query into the reformulated query. Extract the specific transformation strategy used for each individual pair.\n2. Consolidate the list of high-level reformulation patterns by incorporating any newly discovered patterns from task 1, merging semantically redundant ones, and refining names/descriptions so the final set captures generalizable strategies.\n\nEach pattern must include:\n- A short pattern_name describing the type of transformation (e.g., \"Semantic Clarification\")\n- A description explaining how this pattern helps improve effectiveness\n- A transformation_rule summarizing the abstract logic (e.g., \"replace ambiguous action with contextual behavior\")\n- A few examples from the query pairs in the format [[\"original\", \"reformulated\"]]\n\nFor each query pair, identify which pattern(s) were applied and provide a brief explanation.\n\nReturn the results in the following JSON format:\n{{\n    \"consolidated_patterns\": [\n        {{\n            \"pattern_name\": \"Pattern Name\",\n            \"description\": \"Description of the pattern\",\n            \"transformation_rule\": \"How to apply this pattern\",\n            \"examples\": [[\"original_query\", \"reformulated_query\"]]\n        }}\n    ],\n    \"individual_patterns\": [\n        {{\n            \"query_id\": \"actual_query_id\",\n            \"original_query\": \"original query text\",\n            \"reformulated_query\": \"reformulated query text\",\n            \"applied_patterns\": [\"pattern_name_1\", \"pattern_name_2\"],\n            \"explanation\": \"Brief explanation of what patterns were applied and why\"\n        }}\n    ],\n    \"summary\": \"Brief summary of key findings\"\n}}\n\nQuery Reformulation Pairs:\n{query_pairs_text}\n{consolidated_patterns_text}\nInitial Pattern List Length: {initial_pattern_count}\n\nInstructions:\n- Return at most {max_patterns} consolidated patterns\n- For each query pair, identify the actual transformation pattern(s) applied, even if they're not yet in the consolidated list\n- Use the actual query_id from the dataset (e.g., \"qid_123\") in the individual_patterns section\n- Do not repeat semantically redundant patterns\n- Avoid trivial lexical changes unless they contribute significantly to meaning or intent\n- Order patterns by relevance or frequency across the provided query pairs\n- If a query pair shows a new transformation strategy, extract and name that pattern for the individual entry\n\nReturn the results in the JSON format specified above:",
+      "placeholders": ["query_pairs_text", "consolidated_patterns_text", "initial_pattern_count", "max_patterns"]
+    },
+    "pattern_selection": {
+      "template": "Given the following query and retrieved documents, select the most appropriate reformulation pattern.\n\nQuery: {query}\n\nRetrieved Documents:\n{documents_text}\n\nAvailable Patterns:\n{patterns_json}\n\nSelect the pattern that best fits the query and document context. Return only the JSON of the selected pattern.",
+      "placeholders": ["query", "documents_text", "patterns_json"]
+    },
+    "pattern_application": {
+      "template": "Apply the following transformation rule to the query:\n\nQuery: {query}\nTransformation Rule: {transformation_rule}\n\nExamples of this pattern:\n{examples_json}\n\nReturn only the reformulated query.",
+      "placeholders": ["query", "transformation_rule", "examples_json"]
+    }
+  },
+  "models": {
+    "default_openai_model": "gpt-4o",
+    "default_ollama_model": "qwen2.5:72b"
+  },
+  "parameters": {
+    "default_temperature": 0.1,
+    "default_max_tokens": 500,
+    "pattern_extraction_temperature": 0,
+    "pattern_extraction_max_tokens": 2000
+  }
+}
